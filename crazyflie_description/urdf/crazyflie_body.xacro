@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="crazyflie">
+
+  <!-- ========= Base Link (Root, canonical) ========= -->
+  <xacro:macro name="base_link" params="mesh_package mass box_size_x box_size_y box_size_z">
+    <link name="base_link">
+      <!-- Inertial -->
+      <inertial>
+        <origin xyz="0 0 0.017425" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia 
+          ixx="1.657e-05" iyy="1.665e-05" izz="2.926e-05"
+          ixy="8.3e-07" ixz="7.1e-07" iyz="1.8e-06"/>
+      </inertial>
+
+      <!-- Collision -->
+      <collision name="body_collision">
+        <origin xyz="0 0 0.017425"/>
+        <geometry>
+          <box size="${box_size_x} ${box_size_y} ${box_size_z}"/>
+        </geometry>
+      </collision>
+
+      <!-- Visual -->
+      <visual name="body_visual">
+        <origin xyz="0 0 0.017425"/>
+        <geometry>
+          <mesh filename="file://$(find crazyflie_description)/meshes/collada_files/cf2_assembly.dae"/>
+        </geometry>
+      </visual>
+
+    </link>
+  </xacro:macro>
+
+  <!-- ========= Base Footprint (for TF tree only) ========= -->
+  <link name="base_footprint">
+    <inertial>
+      <mass value="0.001"/>
+      <inertia ixx="1e-5" iyy="1e-5" izz="1e-5"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ========= Propeller Macro ========= -->
+  <xacro:macro name="crazyflie_prop" params="prop_name mesh_package mass mesh_file">
+    <link name="${prop_name}">
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="1e-6" iyy="1e-6" izz="2e-6"
+                 ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find crazyflie_description)/meshes/collada_files/${mesh_file}"/>
+        </geometry>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="file://$(find crazyflie_description)/meshes/collada_files/${mesh_file}"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- ========= Properties ========= -->
+  <xacro:property name="robot_ns" value="crazyflie"/>
+  <xacro:property name="max_rot_velocity" value="2618"/>
+  <xacro:property name="motor_constant" value="1.28192e-08"/>
+  <xacro:property name="moment_constant" value="0.005964552"/>
+  <xacro:property name="rotor_drag_coefficient" value="8.06428e-05"/>
+  <xacro:property name="rolling_moment_coefficient" value="1e-7"/>
+  <xacro:property name="rotor_velocity_slowdown_sim" value="20"/>
+
+  <xacro:property name="control_command_topic" value="gazebo/command/twist"/>
+  <xacro:property name="control_enable_topic" value="enable"/>
+  <xacro:property name="control_velocity_gain" value="1.25 1.25 0.2425"/>
+  <xacro:property name="control_attitude_gain" value="0.02 0.02 0.02"/>
+  <xacro:property name="control_angular_rate_gain" value="0.005 0.005 0.005"/>
+  <xacro:property name="control_force_constant" value="1.28192e-08"/>
+  <xacro:property name="control_moment_constant" value="0.005964552"/>
+
+  <!-- ========= Instantiate Body & Props ========= -->
+  <xacro:base_link mesh_package="crazyflie_description" mass="0.025"
+                   box_size_x="0.10" box_size_y="0.10" box_size_z="0.03485"/>
+
+  <xacro:crazyflie_prop prop_name="m1_prop" mesh_package="crazyflie_description" mass="0.0008" mesh_file="ccw_prop.dae"/>
+  <xacro:crazyflie_prop prop_name="m2_prop" mesh_package="crazyflie_description" mass="0.0008" mesh_file="cw_prop.dae"/>
+  <xacro:crazyflie_prop prop_name="m3_prop" mesh_package="crazyflie_description" mass="0.0008" mesh_file="ccw_prop.dae"/>
+  <xacro:crazyflie_prop prop_name="m4_prop" mesh_package="crazyflie_description" mass="0.0008" mesh_file="cw_prop.dae"/>
+
+  <!-- ========= Joints ========= -->
+  <joint name="body_to_footprint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_footprint"/>
+  </joint>
+
+  <joint name="body_to_m1_prop" type="continuous">
+    <parent link="base_link"/><child link="m1_prop"/>
+    <origin xyz="0.031 -0.031 0.021"/><axis xyz="0 0 1"/>
+    <dynamics damping="0.001" friction="0.001"/>
+  </joint>
+
+  <joint name="body_to_m2_prop" type="continuous">
+    <parent link="base_link"/><child link="m2_prop"/>
+    <origin xyz="-0.031 -0.031 0.021"/><axis xyz="0 0 1"/>
+    <dynamics damping="0.001" friction="0.001"/>
+  </joint>
+
+  <joint name="body_to_m3_prop" type="continuous">
+    <parent link="base_link"/><child link="m3_prop"/>
+    <origin xyz="-0.031 0.031 0.021"/><axis xyz="0 0 1"/>
+    <dynamics damping="0.001" friction="0.001"/>
+  </joint>
+
+  <joint name="body_to_m4_prop" type="continuous">
+    <parent link="base_link"/><child link="m4_prop"/>
+    <origin xyz="0.031 0.031 0.021"/><axis xyz="0 0 1"/>
+    <dynamics damping="0.001" friction="0.001"/>
+  </joint>
+
+    <!-- ========= Gazebo Plugins (Ignition Fortress) ========= -->
+  <gazebo>
+
+    <!-- Multicopter Velocity Control -->
+    <plugin
+  filename="/usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/libignition-gazebo6-multicopter-control-system.so"
+  name="ignition::gazebo::systems::MulticopterVelocityControl">
+      <robotNamespace>${robot_ns}</robotNamespace>
+      <commandSubTopic>${control_command_topic}</commandSubTopic>
+      <enableSubTopic>${control_enable_topic}</enableSubTopic>
+      <comLinkName>base_link</comLinkName>
+      <velocityGain>${control_velocity_gain}</velocityGain>
+      <attitudeGain>${control_attitude_gain}</attitudeGain>
+      <angularRateGain>${control_angular_rate_gain}</angularRateGain>
+      <rotorConfiguration>
+        <rotor>
+          <jointName>body_to_m1_prop</jointName>
+          <forceConstant>${control_force_constant}</forceConstant>
+          <momentConstant>${control_moment_constant}</momentConstant>
+          <direction>1</direction>
+        </rotor>
+        <rotor>
+          <jointName>body_to_m2_prop</jointName>
+          <forceConstant>${control_force_constant}</forceConstant>
+          <momentConstant>${control_moment_constant}</momentConstant>
+          <direction>-1</direction>
+        </rotor>
+        <rotor>
+          <jointName>body_to_m3_prop</jointName>
+          <forceConstant>${control_force_constant}</forceConstant>
+          <momentConstant>${control_moment_constant}</momentConstant>
+          <direction>1</direction>
+        </rotor>
+        <rotor>
+          <jointName>body_to_m4_prop</jointName>
+          <forceConstant>${control_force_constant}</forceConstant>
+          <momentConstant>${control_moment_constant}</momentConstant>
+          <direction>-1</direction>
+        </rotor>
+      </rotorConfiguration>
+    </plugin>
+
+    <!-- Motor Model Systems -->
+    <plugin
+  filename="/usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/libignition-gazebo6-multicopter-motor-model-system.so"
+  name="ignition::gazebo::systems::MulticopterMotorModel">
+      <robotNamespace>${robot_ns}</robotNamespace>
+      <jointName>body_to_m1_prop</jointName>
+      <linkName>m1_prop</linkName>
+      <turningDirection>ccw</turningDirection>
+      <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+      <motorConstant>${motor_constant}</motorConstant>
+      <momentConstant>${moment_constant}</momentConstant>
+      <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+      <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+      <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      <motorNumber>0</motorNumber>
+      <motorType>velocity</motorType>
+    </plugin>
+
+    <plugin
+  filename="/usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/libignition-gazebo6-multicopter-motor-model-system.so"
+  name="ignition::gazebo::systems::MulticopterMotorModel">
+      <robotNamespace>${robot_ns}</robotNamespace>
+      <jointName>body_to_m2_prop</jointName>
+      <linkName>m2_prop</linkName>
+      <turningDirection>cw</turningDirection>
+      <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+      <motorConstant>${motor_constant}</motorConstant>
+      <momentConstant>${moment_constant}</momentConstant>
+      <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+      <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+      <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      <motorNumber>1</motorNumber>
+      <motorType>velocity</motorType>
+    </plugin>
+
+    <plugin
+  filename="/usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/libignition-gazebo6-multicopter-motor-model-system.so"
+  name="ignition::gazebo::systems::MulticopterMotorModel">
+      <robotNamespace>${robot_ns}</robotNamespace>
+      <jointName>body_to_m3_prop</jointName>
+      <linkName>m3_prop</linkName>
+      <turningDirection>ccw</turningDirection>
+      <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+      <motorConstant>${motor_constant}</motorConstant>
+      <momentConstant>${moment_constant}</momentConstant>
+      <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+      <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+      <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      <motorNumber>2</motorNumber>
+      <motorType>velocity</motorType>
+    </plugin>
+
+    <plugin
+  filename="/usr/lib/x86_64-linux-gnu/ign-gazebo-6/plugins/libignition-gazebo6-multicopter-motor-model-system.so"
+  name="ignition::gazebo::systems::MulticopterMotorModel">
+      <robotNamespace>${robot_ns}</robotNamespace>
+      <jointName>body_to_m4_prop</jointName>
+      <linkName>m4_prop</linkName>
+      <turningDirection>cw</turningDirection>
+      <maxRotVelocity>${max_rot_velocity}</maxRotVelocity>
+      <motorConstant>${motor_constant}</motorConstant>
+      <momentConstant>${moment_constant}</momentConstant>
+      <rotorDragCoefficient>${rotor_drag_coefficient}</rotorDragCoefficient>
+      <rollingMomentCoefficient>${rolling_moment_coefficient}</rollingMomentCoefficient>
+      <rotorVelocitySlowdownSim>${rotor_velocity_slowdown_sim}</rotorVelocitySlowdownSim>
+      <motorNumber>3</motorNumber>
+      <motorType>velocity</motorType>
+    </plugin>
+
+    <!-- ✅ IMU Plugin -->
+    <plugin filename="libignition-gazebo6-imu-system.so"
+            name="ignition::gazebo::systems::Imu">
+      <topic>imu</topic>
+      <frame_id>base_link</frame_id>
+      <orientation_reference_frame>world</orientation_reference_frame>
+    </plugin>
+
+    <!-- ✅ Odometry Publisher -->
+    <plugin filename="libignition-gazebo6-odometry-publisher-system.so"
+            name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_topic>odom</odom_topic>
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <odom_publish_frequency>100</odom_publish_frequency>
+      <dimensions>3</dimensions>
+    </plugin>
+
+  </gazebo>
+</robot>

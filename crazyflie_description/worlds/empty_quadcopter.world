@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <world name="empty_quadcopter">
+
+ <gravity>0 0 -9.81</gravity>
+<physics name="default" type="dartsim">
+  <max_step_size>0.001</max_step_size>
+  <real_time_factor>1.0</real_time_factor>
+</physics>
+
+
+    <!-- ✅ Add a visible ground plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ✅ Lighting -->
+    <light type="directional" name="sun">
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <direction>-0.5 0.2 -1</direction>
+    </light>
+
+    <!-- ✅ GUI camera tracking -->
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>0 -2 1 0 0.3 0</pose>
+        <track_visual>crazyflie</track_visual>
+        <track_min_distance>0.1</track_min_distance>
+      </camera>
+    </gui>
+  </world>
+</sdf>

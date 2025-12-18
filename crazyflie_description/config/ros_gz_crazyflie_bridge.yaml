@@ -1,29 +1,38 @@
----
-# Send velocity commands from ROS → Gazebo
-- ros_topic_name: "/cmd_vel"
-  gz_topic_name: "/crazyflie/gazebo/command/twist"
-  ros_type_name: "geometry_msgs/msg/Twist"
-  gz_type_name: "ignition.msgs.Twist"
-  direction: ROS_TO_GZ
+# ==================== ROS ↔ Gazebo Bridge ====================
 
-# Bridge the simulation clock from Gazebo → ROS
+# Motor speed commands: ROS -> Gazebo
+- ros_topic_name: "/crazyflie/motor_cmd"
+  gz_topic_name:  "/crazyflie/gazebo/command/motor_speed"
+  ros_type_name:  "actuator_msgs/msg/Actuators"
+  gz_type_name:   "gz.msgs.Actuators"
+  direction:      ROS_TO_GZ
+
+
+
+# Bridge the simulation clock (Gazebo → ROS)
 - ros_topic_name: "/clock"
-  gz_topic_name: "/world/empty/clock"
+  gz_topic_name: "/world/empty_quadcopter/clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
 
+# Bridge odometry (Gazebo → ROS)
+- ros_topic_name: "/crazyflie/odom"
+  gz_topic_name: "/crazyflie/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
 
-#  Pose (Gazebo → ROS)
+# Bridge pose (Gazebo → ROS)
 - ros_topic_name: "/crazyflie/pose"
   gz_topic_name: "/model/crazyflie/pose"
   ros_type_name: "geometry_msgs/msg/PoseArray"
-  gz_type_name: "ignition.msgs.Pose_V"
+  gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
 
-# Odometry from Gazebo → ROS
-- ros_topic_name: "/crazyflie/odom"
-  gz_topic_name: "/model/crazyflie/odometry_with_covariance"
-  ros_type_name: "nav_msgs/msg/Odometry"
-  gz_type_name: "ignition.msgs.OdometryWithCovariance"
+# Bridge IMU (Gazebo → ROS)
+- ros_topic_name: "/crazyflie/imu"
+  gz_topic_name: "/crazyflie/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS

@@ -21,11 +21,6 @@ trajectory, flip, recovery, and hold sequence.
 
 <img src="media/videos/crazyflie_demo.gif" alt="Crazyflie demo animation" width="640">
 
-For full-quality playback, open one of the direct video files:
-
-- [Crazyflie demo video, MP4 container](media/videos/crazyflie_demo.mp4)
-- [Original demo recording](demo-1.mp4)
-
 ### Controller Plots
 
 The plots below were generated from:

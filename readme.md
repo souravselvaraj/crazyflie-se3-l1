@@ -19,13 +19,11 @@ The main workflow is:
 The demo below shows the Crazyflie simulation running the geometric controller
 trajectory, flip, recovery, and hold sequence.
 
-<video controls muted width="720" src="media/videos/crazyflie_demo.mp4">
-  Your browser does not support embedded video playback.
-</video>
+GitHub does not reliably render local video players inside README files, so use
+one of the direct video links:
 
-If the embedded player does not render, open the video directly:
-
-[Crazyflie demo video](media/videos/crazyflie_demo.mp4)
+- [Crazyflie demo video, MP4 container](media/videos/crazyflie_demo.mp4)
+- [Original demo recording](demo-1.mp4)
 
 ### Controller Plots
 
